@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>財團法人中央廣播電臺 AI語音播報系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e2e8f0; /* slategray-200 */
+        }
+        .card {
+            background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+            border-radius: 2rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1), 0 6px 6px rgba(0, 0, 0, 0.08);
+        }
+        .btn-primary {
+            background-color: #2563eb; /* blue-600 */
+            color: white;
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-primary:hover {
+            background-color: #1d4ed8; /* blue-700 */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary:disabled {
+            background-color: #93c5fd; /* blue-300 */
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background-color: #64748b; /* slategray-500 */
+            color: white;
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-secondary:hover {
+            background-color: #475569; /* slategray-600 */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .input-field, .textarea-field {
+            border: 1px solid #cbd5e1; /* slategray-300 */
+            border-radius: 0.75rem;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .input-field:focus, .textarea-field:focus {
+            outline: none;
+            border-color: #3b82f6; /* blue-500 */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+        .voice-options-container {
+            border: 1px solid #e2e8f0; /* slategray-200 */
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            background-color: #f8fafc; /* slategray-50 */
+        }
+        .voice-options-container.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="card w-full max-w-4xl p-8">
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-6">中央廣播電臺AI語音播報系統</h1>
+        <p class="text-center text-gray-600 mb-8">請輸入廣播內容，並選擇語音，即可生成播報音檔。</p>
+        <p class="text-center text-gray-600 mb-8">By James Jen</p>
+        <!-- Input fields -->
+        <div class="space-y-6 mb-6">
+            <div>
+                <label for="title" class="block text-lg font-medium text-gray-700 mb-2">廣播標題</label>
+                <input type="text" id="title" placeholder="例如：今日新聞快報" class="input-field w-full p-3 text-lg">
+            </div>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <label for="datetime" class="block text-lg font-medium text-gray-700 mb-2">日期時間</label>
+                    <input type="datetime-local" id="datetime" class="input-field w-full p-3 text-lg">
+                </div>
+                <div>
+                    <label for="editor" class="block text-lg font-medium text-gray-700 mb-2">撰稿編輯</label>
+                    <input type="text" id="editor" placeholder="例如：陳大明" class="input-field w-full p-3 text-lg">
+                </div>
+            </div>
+            <div>
+                <label for="content" class="block text-lg font-medium text-gray-700 mb-2">廣播內文</label>
+                <textarea id="content" rows="8" placeholder="請在此輸入廣播內文..." class="textarea-field w-full p-4 text-lg"></textarea>
+            </div>
+        </div>
+
+        <!-- Voice Selection & Buttons -->
+        <div class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4 mb-6">
+            <div class="flex items-center space-x-6">
+                <span class="text-lg font-medium text-gray-700">選擇性別：</span>
+                <div class="flex flex-wrap gap-4 items-center" id="genderSelection">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="radio" name="gender" value="male" checked class="form-radio text-blue-600">
+                        <span class="text-lg font-medium text-gray-800">男聲</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="radio" name="gender" value="female" class="form-radio text-pink-600">
+                        <span class="text-lg font-medium text-gray-800">女聲</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Male Voices -->
+        <div id="maleVoices" class="voice-options-container">
+            <span class="text-lg font-medium text-gray-700 mb-2 block">選擇聲調特性：</span>
+            <div class="flex flex-wrap gap-4 items-center">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="radio" name="voiceTone" value="Charon" checked class="form-radio text-blue-600">
+                    <span class="text-lg font-medium text-gray-800">穩重聲 (Charon)</span>
+                </label>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="radio" name="voiceTone" value="Puck" class="form-radio text-pink-600">
+                    <span class="text-lg font-medium text-gray-800">活潑聲 (Puck)</span>
+                </label>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="radio" name="voiceTone" value="Enceladus" class="form-radio text-red-600">
+                    <span class="text-lg font-medium text-gray-800">氣音 (Enceladus)</span>
+                </label>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="radio" name="voiceTone" value="Algieba" class="form-radio text-yellow-600">
+                    <span class="text-lg font-medium text-gray-800">專業聲 (Algieba)</span>
+                </label>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="radio" name="voiceTone" value="Orus" class="form-radio text-orange-600">
+                    <span class="text-lg font-medium text-gray-800">剛毅聲 (Orus)</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Female Voices -->
+        <div id="femaleVoices" class="voice-options-container hidden">
+            <span class="text-lg font-medium text-gray-700 mb-2 block">選擇聲調特性：</span>
+            <div class="flex flex-wrap gap-4 items-center">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="radio" name="voiceTone" value="Leda" checked class="form-radio text-purple-600">
+                    <span class="text-lg font-medium text-gray-800">年輕聲 (Leda)</span>
+                </label>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="radio" name="voiceTone" value="Zephyr" class="form-radio text-teal-600">
+                    <span class="text-lg font-medium text-gray-800">明亮聲 (Zephyr)</span>
+                </label>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="radio" name="voiceTone" value="Kore" class="form-radio text-green-600">
+                    <span class="text-lg font-medium text-gray-800">堅定聲 (Kore)</span>
+                </label>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="radio" name="voiceTone" value="Erinome" class="form-radio text-gray-600">
+                    <span class="text-lg font-medium text-gray-800">清晰聲 (Erinome)</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="mt-6 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
+            <button id="generateBtn" class="btn-primary w-full sm:w-auto px-8 py-3 rounded-xl text-lg font-bold">
+                語音生成
+            </button>
+            <a id="downloadBtn" href="#" class="btn-secondary hidden w-full sm:w-auto px-8 py-3 rounded-xl text-lg font-bold text-center" download="broadcast.wav">
+                下載 WAV
+            </a>
+        </div>
+
+
+        <!-- Status and Audio Player -->
+        <div class="mt-8 text-center">
+            <div id="statusMessage" class="text-lg font-semibold text-gray-700 mb-4" style="min-height: 1.5rem;"></div>
+            <audio id="audioPlayer" class="w-full" controls></audio>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const generateBtn = document.getElementById('generateBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const audioPlayer = document.getElementById('audioPlayer');
+            const statusMessage = document.getElementById('statusMessage');
+            const genderRadios = document.querySelectorAll('input[name="gender"]');
+            const maleVoicesContainer = document.getElementById('maleVoices');
+            const femaleVoicesContainer = document.getElementById('femaleVoices');
+
+            // Set default date/time to now
+            const datetimeInput = document.getElementById('datetime');
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const day = now.getDate().toString().padStart(2, '0');
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            datetimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+            // Helper function to decode base64 string to ArrayBuffer
+            const base64ToArrayBuffer = (base64) => {
+                const binaryString = window.atob(base64);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                return bytes.buffer;
+            };
+
+            // Helper function to convert raw PCM to WAV blob
+            const pcmToWav = (pcmData, sampleRate) => {
+                const dataLength = pcmData.byteLength;
+                const buffer = new ArrayBuffer(44 + dataLength);
+                const view = new DataView(buffer);
+
+                // RIFF identifier
+                writeString(view, 0, 'RIFF');
+                // file length
+                view.setUint32(4, 36 + dataLength, true);
+                // RIFF type
+                writeString(view, 8, 'WAVE');
+                // format chunk identifier
+                writeString(view, 12, 'fmt ');
+                // format chunk length
+                view.setUint32(16, 16, true);
+                // sample format (1 = PCM)
+                view.setUint16(20, 1, true);
+                // channel count
+                view.setUint16(22, 1, true);
+                // sample rate
+                view.setUint32(24, sampleRate, true);
+                // byte rate (sample rate * block align)
+                view.setUint32(28, sampleRate * 2, true);
+                // block align (channels * bytes per sample)
+                view.setUint16(32, 2, true);
+                // bits per sample
+                view.setUint16(34, 16, true);
+                // data chunk identifier
+                writeString(view, 36, 'data');
+                // data chunk length
+                view.setUint32(40, dataLength, true);
+
+                // Write the PCM data
+                const pcmArray = new Uint8Array(pcmData);
+                for (let i = 0; i < dataLength; i++) {
+                    view.setUint8(44 + i, pcmArray[i]);
+                }
+
+                return new Blob([view], { type: 'audio/wav' });
+            };
+
+            const writeString = (view, offset, string) => {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            };
+
+            // Function to fetch and process a single TTS segment
+            const fetchTtsAudio = async (text, voiceName) => {
+                let response;
+                let retryCount = 0;
+                const maxRetries = 3;
+                const baseDelay = 1000;
+
+                while (retryCount < maxRetries) {
+                    try {
+                        const payload = {
+                            contents: [{
+                                parts: [{ text: text }]
+                            }],
+                            generationConfig: {
+                                responseModalities: ["AUDIO"],
+                                speechConfig: {
+                                    voiceConfig: {
+                                        prebuiltVoiceConfig: { voiceName: voiceName }
+                                    }
+                                }
+                            },
+                            model: "gemini-2.5-flash-preview-tts"
+                        };
+                        // 如果您遇到 401 錯誤，請在這裡貼上您的 Gemini API 金鑰。您可以在 Google AI Studio 獲取金鑰。
+                        // If you encounter a 401 error, please paste your Gemini API key here. You can get the key from Google AI Studio.
+                        const apiKey = ""; 
+                        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+
+                        // 發起 API 請求
+                        response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        // 檢查回應狀態
+                        if (!response.ok) {
+                            if (response.status === 401) {
+                                throw new Error('API 金鑰無效。請確認您的金鑰是否正確。');
+                            }
+                            // 如果不是 401 錯誤，則嘗試重試
+                            if (retryCount < maxRetries - 1) {
+                                const delay = baseDelay * (2 ** retryCount) + Math.random() * 1000; // Exponential backoff with jitter
+                                console.warn(`API 請求失敗，正在重試... (${retryCount + 1}/${maxRetries})`);
+                                await new Promise(resolve => setTimeout(resolve, delay));
+                                retryCount++;
+                                continue; // Skip to next loop iteration
+                            }
+                            const errorText = await response.text();
+                            console.error('API 錯誤回應:', errorText);
+                            throw new Error(`API 錯誤: ${response.status} ${response.statusText}`);
+                        }
+
+                        // 嘗試解析 JSON 回應
+                        let result;
+                        try {
+                            result = await response.json();
+                        } catch (e) {
+                            console.error('無法解析 API 回應為 JSON:', e);
+                            throw new Error('API 回應格式無效或為空。');
+                        }
+                        
+                        const part = result?.candidates?.[0]?.content?.parts?.[0];
+                        if (!part || !part.inlineData || !part.inlineData.data) {
+                            throw new Error('API 回應格式不正確，未找到音訊資料。');
+                        }
+                        
+                        const audioData = part.inlineData.data;
+                        const mimeType = part.inlineData.mimeType;
+                        const sampleRate = parseInt(mimeType.match(/rate=(\d+)/)[1], 10);
+                        const pcmData = base64ToArrayBuffer(audioData);
+
+                        return { pcmData, sampleRate };
+
+                    } catch (error) {
+                        console.error('音訊生成失敗:', error);
+                        // 確保錯誤被傳播到外部 catch 區塊
+                        throw error;
+                    }
+                }
+                throw new Error('API 請求在多次重試後仍失敗，請稍後再試。');
+            };
+
+            // Handle gender selection and voice option visibility
+            genderRadios.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    if (radio.value === 'male') {
+                        maleVoicesContainer.classList.remove('hidden');
+                        femaleVoicesContainer.classList.add('hidden');
+                        // Set the first option as default for the visible group
+                        maleVoicesContainer.querySelector('input[name="voiceTone"]').checked = true;
+                    } else {
+                        femaleVoicesContainer.classList.remove('hidden');
+                        maleVoicesContainer.classList.add('hidden');
+                        // Set the first option as default for the visible group
+                        femaleVoicesContainer.querySelector('input[name="voiceTone"]').checked = true;
+                    }
+                });
+            });
+
+            generateBtn.addEventListener('click', async () => {
+                const title = document.getElementById('title').value.trim();
+                const datetime = document.getElementById('datetime').value.trim();
+                const editor = document.getElementById('editor').value.trim();
+                const content = document.getElementById('content').value.trim();
+                const selectedVoice = document.querySelector('input[name="voiceTone"]:checked').value;
+
+                if (!content) {
+                    statusMessage.textContent = '請輸入廣播內文！';
+                    return;
+                }
+
+                // Reset UI
+                statusMessage.textContent = '正在合成音檔中(合成時間與文稿長度有關)，合成完成會自動播報，請您稍候...';
+                generateBtn.disabled = true;
+                downloadBtn.classList.add('hidden');
+                audioPlayer.src = '';
+                audioPlayer.load();
+
+                try {
+                    const dt = new Date(datetime);
+                    const year = dt.getFullYear();
+                    const month = dt.getMonth() + 1;
+                    const day = dt.getDate();
+                    let hour = dt.getHours();
+                    let ampm = '上午';
+
+                    if (hour >= 12) {
+                        ampm = '下午';
+                        if (hour > 12) {
+                            hour -= 12;
+                        }
+                    } else if (hour === 0) {
+                        hour = 12;
+                    }
+
+                    const broadcastDatetime = `${year} 年 ${month} 月 ${day} 日 ${ampm} ${hour} 點`;
+                    
+                    // Combine broadcast script
+                    const broadcastScript = [
+                        '敬請收聽中央廣播電台為您製作的報導 由AI語音播報。',
+                        `新聞標題：${title}`,
+                        `播報日期：${broadcastDatetime}`,
+                        `撰稿編輯：${editor}`,
+                        content,
+                        '本播報由AI語音提供，謝謝收聽。'
+                    ].filter(Boolean).join('。'); // Use filter(Boolean) to remove empty strings
+
+                    // For simplicity and efficiency, we will make one call for the entire combined text.
+                    // This is more efficient and handles the flow better than three separate calls.
+                    const { pcmData, sampleRate } = await fetchTtsAudio(broadcastScript, selectedVoice);
+
+                    // Convert the combined PCM data to a WAV file
+                    const audioBlob = pcmToWav(pcmData, sampleRate);
+                    const audioUrl = URL.createObjectURL(audioBlob);
+
+                    audioPlayer.src = audioUrl;
+                    audioPlayer.play();
+
+                    downloadBtn.classList.remove('hidden');
+                    downloadBtn.href = audioUrl;
+                    statusMessage.textContent = '音檔已成功生成並播放！並提供音檔下載';
+
+                } catch (error) {
+                    if (error.message.includes('API 金鑰無效')) {
+                        statusMessage.textContent = '音檔生成失敗：API 金鑰無效。請確認您已正確設定金鑰。';
+                    } else {
+                        statusMessage.textContent = '音檔生成失敗，請確認您的網路連線或稍後再試。';
+                    }
+                    console.error('播放失敗:', error);
+                } finally {
+                    generateBtn.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
